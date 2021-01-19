@@ -1,7 +1,10 @@
-module github.com/micro/go-plugins/broker/service/v2
+module github.com/unistack-org/micro-broker-service/v3
 
-go 1.13
+go 1.15
 
-require github.com/micro/go-micro/v2 v2.9.1-0.20200716153311-f9bf56239306
-
-replace github.com/coreos/etcd => github.com/ozonru/etcd v3.3.20-grpc1.27-origmodule+incompatible
+require (
+	github.com/golang/protobuf v1.4.3
+	github.com/unistack-org/micro/v3 v3.1.3
+	google.golang.org/grpc v1.27.1
+	google.golang.org/protobuf v1.25.0
+)
