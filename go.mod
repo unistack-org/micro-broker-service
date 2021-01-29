@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/golang/protobuf v1.4.3
-	github.com/unistack-org/micro/v3 v3.1.3
+	github.com/unistack-org/micro/v3 v3.2.4
 	google.golang.org/grpc v1.27.1
 	google.golang.org/protobuf v1.25.0
 )

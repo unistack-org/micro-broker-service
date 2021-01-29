@@ -141,6 +141,10 @@ func (b *serviceBroker) String() string {
 	return "service"
 }
 
+func (b *serviceBroker) Name() string {
+	return b.opts.Name
+}
+
 func NewBroker(opts ...broker.Option) broker.Broker {
 	options := broker.NewOptions(opts...)
 
