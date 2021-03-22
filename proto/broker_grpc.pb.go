@@ -11,7 +11,8 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion6
+// Requires gRPC-Go v1.32.0 or later.
+const _ = grpc.SupportPackageIsVersion7
 
 // BrokerClient is the client API for Broker service.
 //
@@ -39,7 +40,7 @@ func (c *brokerClient) Publish(ctx context.Context, in *PublishRequest, opts ...
 }
 
 func (c *brokerClient) Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (Broker_SubscribeClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Broker_serviceDesc.Streams[0], "/service.Broker/Subscribe", opts...)
+	stream, err := c.cc.NewStream(ctx, &Broker_ServiceDesc.Streams[0], "/service.Broker/Subscribe", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,16 +84,23 @@ type BrokerServer interface {
 type UnimplementedBrokerServer struct {
 }
 
-func (*UnimplementedBrokerServer) Publish(context.Context, *PublishRequest) (*Empty, error) {
+func (UnimplementedBrokerServer) Publish(context.Context, *PublishRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
-func (*UnimplementedBrokerServer) Subscribe(*SubscribeRequest, Broker_SubscribeServer) error {
+func (UnimplementedBrokerServer) Subscribe(*SubscribeRequest, Broker_SubscribeServer) error {
 	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
 }
-func (*UnimplementedBrokerServer) mustEmbedUnimplementedBrokerServer() {}
+func (UnimplementedBrokerServer) mustEmbedUnimplementedBrokerServer() {}
 
-func RegisterBrokerServer(s *grpc.Server, srv BrokerServer) {
-	s.RegisterService(&_Broker_serviceDesc, srv)
+// UnsafeBrokerServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to BrokerServer will
+// result in compilation errors.
+type UnsafeBrokerServer interface {
+	mustEmbedUnimplementedBrokerServer()
+}
+
+func RegisterBrokerServer(s grpc.ServiceRegistrar, srv BrokerServer) {
+	s.RegisterService(&Broker_ServiceDesc, srv)
 }
 
 func _Broker_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -134,7 +142,10 @@ func (x *brokerSubscribeServer) Send(m *Message) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-var _Broker_serviceDesc = grpc.ServiceDesc{
+// Broker_ServiceDesc is the grpc.ServiceDesc for Broker service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Broker_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "service.Broker",
 	HandlerType: (*BrokerServer)(nil),
 	Methods: []grpc.MethodDesc{
