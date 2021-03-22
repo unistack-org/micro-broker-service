@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	pbmicro "github.com/unistack-org/micro-broker-service/v3/micro"
 	pb "github.com/unistack-org/micro-broker-service/v3/proto"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/client"
@@ -15,7 +16,7 @@ import (
 type serviceBroker struct {
 	addrs   []string
 	service string
-	client  pb.BrokerService
+	client  pbmicro.BrokerClient
 	opts    broker.Options
 }
 
@@ -54,7 +55,7 @@ func (b *serviceBroker) Init(opts ...broker.Option) error {
 		return fmt.Errorf("missing Client option")
 	}
 
-	b.client = pb.NewBrokerService(b.service, cli)
+	b.client = pbmicro.NewBrokerClient(b.service, cli)
 
 	return nil
 }

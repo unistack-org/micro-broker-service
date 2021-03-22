@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	pb "github.com/unistack-org/micro-broker-service/v3/proto"
+	pbmicro "github.com/unistack-org/micro-broker-service/v3/micro"
 	"github.com/unistack-org/micro/v3/broker"
 	"github.com/unistack-org/micro/v3/logger"
 )
@@ -12,7 +12,7 @@ type serviceSub struct {
 	topic   string
 	group   string
 	handler broker.Handler
-	stream  pb.Broker_SubscribeService
+	stream  pbmicro.Broker_SubscribeClient
 	closed  chan bool
 	options broker.SubscribeOptions
 }
