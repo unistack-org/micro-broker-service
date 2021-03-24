@@ -75,6 +75,7 @@ func (b *serviceBroker) Init(opts ...broker.Option) error {
 
 	b.client = pbmicro.NewBrokerClient(b.service, cli)
 
+	b.init = true
 	return nil
 }
 
