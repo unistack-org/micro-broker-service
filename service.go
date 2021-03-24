@@ -17,6 +17,7 @@ type serviceBroker struct {
 	addrs   []string
 	service string
 	client  pbmicro.BrokerClient
+	init    bool
 	opts    broker.Options
 }
 
@@ -33,6 +34,10 @@ func (b *serviceBroker) Disconnect(ctx context.Context) error {
 }
 
 func (b *serviceBroker) Init(opts ...broker.Option) error {
+	if len(opts) == 0 && b.init {
+		return nil
+	}
+
 	for _, o := range opts {
 		o(&b.opts)
 	}
@@ -45,6 +50,19 @@ func (b *serviceBroker) Init(opts ...broker.Option) error {
 		if v, ok := b.opts.Context.Value(serviceKey{}).(string); ok && v != "" {
 			b.service = v
 		}
+	}
+
+	if err := b.opts.Register.Init(); err != nil {
+		return err
+	}
+	if err := b.opts.Tracer.Init(); err != nil {
+		return err
+	}
+	if err := b.opts.Logger.Init(); err != nil {
+		return err
+	}
+	if err := b.opts.Meter.Init(); err != nil {
+		return err
 	}
 
 	if b.service == "" {
