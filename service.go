@@ -1,16 +1,16 @@
 // Package service provides the broker service client
-package service
+package service // import "go.unistack.org/micro-broker-service/v3"
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	pbmicro "github.com/unistack-org/micro-broker-service/v3/micro"
-	pb "github.com/unistack-org/micro-broker-service/v3/proto"
-	"github.com/unistack-org/micro/v3/broker"
-	"github.com/unistack-org/micro/v3/client"
-	"github.com/unistack-org/micro/v3/logger"
+	pbmicro "go.unistack.org/micro-broker-service/v3/micro"
+	pb "go.unistack.org/micro-broker-service/v3/proto"
+	"go.unistack.org/micro/v3/broker"
+	"go.unistack.org/micro/v3/client"
+	"go.unistack.org/micro/v3/logger"
 )
 
 type serviceBroker struct {

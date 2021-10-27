@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
-	pbmicro "github.com/unistack-org/micro-broker-service/v3/micro"
-	"github.com/unistack-org/micro/v3/broker"
-	"github.com/unistack-org/micro/v3/logger"
+	pbmicro "go.unistack.org/micro-broker-service/v3/micro"
+	"go.unistack.org/micro/v3/broker"
+	"go.unistack.org/micro/v3/logger"
 )
 
 type serviceSub struct {
