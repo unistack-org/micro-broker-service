@@ -3,24 +3,42 @@ syntax = "proto3";
 package servicepb;
 option go_package="go.unistack.org/micro-broker-service/v3/proto;servicepb";
 
-service Broker {
-	rpc Publish(PublishRequest) returns (Empty) {};
+service BrokerService {
+	rpc Publish(PublishRequest) returns (PublishResponse) {};
+	rpc BatchPublish(BatchPublishRequest) returns (BatchPublishResponse) {};
 	rpc Subscribe(SubscribeRequest) returns (stream Message) {};
-}
-
-message Empty {}
+	rpc BatchSubscribe(BatchSubscribeRequest) returns (stream Message) {};
+};
 
 message PublishRequest {
 	string topic = 1;
 	Message message = 2;
-}
+};
+
+message BatchPublishRequest {
+	string topic = 1;
+	repeated Message message = 2;
+};
+
+message PublishResponse {
+
+};
+
+message BatchPublishResponse {
+
+};
 
 message SubscribeRequest {
 	string topic = 1;
 	string group = 2;
-}
+};
+
+message BatchSubscribeRequest {
+	string topic = 1;
+	string group = 2;
+};
 
 message Message {
 	map<string,string> header = 1;
 	bytes body = 2;
-}
+};

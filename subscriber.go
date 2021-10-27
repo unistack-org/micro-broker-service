@@ -12,7 +12,7 @@ type serviceSub struct {
 	topic   string
 	group   string
 	handler broker.Handler
-	stream  pbmicro.Broker_SubscribeClient
+	stream  pbmicro.BrokerService_SubscribeClient
 	closed  chan bool
 	options broker.SubscribeOptions
 }
@@ -37,6 +37,10 @@ func (s *serviceEvent) Ack() error {
 
 func (s *serviceEvent) Error() error {
 	return s.err
+}
+
+func (s *serviceEvent) SetError(err error) {
+	s.err = err
 }
 
 func (s *serviceSub) isClosed() bool {

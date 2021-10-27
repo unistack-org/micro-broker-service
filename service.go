@@ -11,12 +11,13 @@ import (
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/client"
 	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 type serviceBroker struct {
 	addrs   []string
 	service string
-	client  pbmicro.BrokerClient
+	client  pbmicro.BrokerServiceClient
 	init    bool
 	opts    broker.Options
 }
@@ -73,7 +74,7 @@ func (b *serviceBroker) Init(opts ...broker.Option) error {
 		return fmt.Errorf("missing Client option")
 	}
 
-	b.client = pbmicro.NewBrokerClient(b.service, cli)
+	b.client = pbmicro.NewBrokerServiceClient(b.service, cli)
 
 	b.init = true
 	return nil
@@ -83,18 +84,38 @@ func (b *serviceBroker) Options() broker.Options {
 	return b.opts
 }
 
+func (b *serviceBroker) BatchPublish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
+	return b.publish(ctx, msgs, opts...)
+}
+
 func (b *serviceBroker) Publish(ctx context.Context, topic string, msg *broker.Message, opts ...broker.PublishOption) error {
-	if logger.V(logger.TraceLevel) {
-		logger.Tracef(ctx, "Publishing to topic %s broker %v", topic, b.addrs)
+	msg.Header.Set(metadata.HeaderTopic, topic)
+	return b.publish(ctx, []*broker.Message{msg}, opts...)
+}
+
+func (b *serviceBroker) publish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
+	for _, msg := range msgs {
+		topic, _ := msg.Header.Get(metadata.HeaderTopic)
+		if logger.V(logger.TraceLevel) {
+			logger.Tracef(ctx, "Publishing to topic %s broker %v", topic, b.addrs)
+		}
+		_, err := b.client.Publish(ctx, &pb.PublishRequest{
+			Topic: topic,
+			Message: &pb.Message{
+				Header: msg.Header,
+				Body:   msg.Body,
+			},
+		}, client.WithAddress(b.addrs...))
+		if err != nil {
+			return err
+		}
 	}
-	_, err := b.client.Publish(ctx, &pb.PublishRequest{
-		Topic: topic,
-		Message: &pb.Message{
-			Header: msg.Header,
-			Body:   msg.Body,
-		},
-	}, client.WithAddress(b.addrs...))
-	return err
+
+	return nil
+}
+
+func (b *serviceBroker) BatchSubscribe(ctx context.Context, topic string, handler broker.BatchHandler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
+	return nil, nil
 }
 
 func (b *serviceBroker) Subscribe(ctx context.Context, topic string, handler broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {

@@ -12,21 +12,23 @@ import (
 )
 
 var (
-	BrokerName = "Broker"
+	BrokerServiceName = "BrokerService"
 
-	BrokerEndpoints = []api.Endpoint{}
+	BrokerServiceEndpoints = []api.Endpoint{}
 )
 
-func NewBrokerEndpoints() []api.Endpoint {
-	return BrokerEndpoints
+func NewBrokerServiceEndpoints() []api.Endpoint {
+	return BrokerServiceEndpoints
 }
 
-type BrokerClient interface {
-	Publish(ctx context.Context, req *proto.PublishRequest, opts ...client.CallOption) (*proto.Empty, error)
-	Subscribe(ctx context.Context, req *proto.SubscribeRequest, opts ...client.CallOption) (Broker_SubscribeClient, error)
+type BrokerServiceClient interface {
+	Publish(ctx context.Context, req *proto.PublishRequest, opts ...client.CallOption) (*proto.PublishResponse, error)
+	BatchPublish(ctx context.Context, req *proto.BatchPublishRequest, opts ...client.CallOption) (*proto.BatchPublishResponse, error)
+	Subscribe(ctx context.Context, req *proto.SubscribeRequest, opts ...client.CallOption) (BrokerService_SubscribeClient, error)
+	BatchSubscribe(ctx context.Context, req *proto.BatchSubscribeRequest, opts ...client.CallOption) (BrokerService_BatchSubscribeClient, error)
 }
 
-type Broker_SubscribeClient interface {
+type BrokerService_SubscribeClient interface {
 	Context() context.Context
 	SendMsg(msg interface{}) error
 	RecvMsg(msg interface{}) error
@@ -34,12 +36,30 @@ type Broker_SubscribeClient interface {
 	Recv() (*proto.Message, error)
 }
 
-type BrokerServer interface {
-	Publish(ctx context.Context, req *proto.PublishRequest, rsp *proto.Empty) error
-	Subscribe(ctx context.Context, req *proto.SubscribeRequest, stream Broker_SubscribeStream) error
+type BrokerService_BatchSubscribeClient interface {
+	Context() context.Context
+	SendMsg(msg interface{}) error
+	RecvMsg(msg interface{}) error
+	Close() error
+	Recv() (*proto.Message, error)
 }
 
-type Broker_SubscribeStream interface {
+type BrokerServiceServer interface {
+	Publish(ctx context.Context, req *proto.PublishRequest, rsp *proto.PublishResponse) error
+	BatchPublish(ctx context.Context, req *proto.BatchPublishRequest, rsp *proto.BatchPublishResponse) error
+	Subscribe(ctx context.Context, req *proto.SubscribeRequest, stream BrokerService_SubscribeStream) error
+	BatchSubscribe(ctx context.Context, req *proto.BatchSubscribeRequest, stream BrokerService_BatchSubscribeStream) error
+}
+
+type BrokerService_SubscribeStream interface {
+	Context() context.Context
+	SendMsg(msg interface{}) error
+	RecvMsg(msg interface{}) error
+	Close() error
+	Send(msg *proto.Message) error
+}
+
+type BrokerService_BatchSubscribeStream interface {
 	Context() context.Context
 	SendMsg(msg interface{}) error
 	RecvMsg(msg interface{}) error
