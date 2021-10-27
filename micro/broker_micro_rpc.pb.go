@@ -12,56 +12,65 @@ import (
 	server "go.unistack.org/micro/v3/server"
 )
 
-type brokerClient struct {
+type brokerServiceClient struct {
 	c    client.Client
 	name string
 }
 
-func NewBrokerClient(name string, c client.Client) BrokerClient {
-	return &brokerClient{c: c, name: name}
+func NewBrokerServiceClient(name string, c client.Client) BrokerServiceClient {
+	return &brokerServiceClient{c: c, name: name}
 }
 
-func (c *brokerClient) Publish(ctx context.Context, req *proto.PublishRequest, opts ...client.CallOption) (*proto.Empty, error) {
-	rsp := &proto.Empty{}
-	err := c.c.Call(ctx, c.c.NewRequest(c.name, "Broker.Publish", req), rsp, opts...)
+func (c *brokerServiceClient) Publish(ctx context.Context, req *proto.PublishRequest, opts ...client.CallOption) (*proto.PublishResponse, error) {
+	rsp := &proto.PublishResponse{}
+	err := c.c.Call(ctx, c.c.NewRequest(c.name, "BrokerService.Publish", req), rsp, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return rsp, nil
 }
 
-func (c *brokerClient) Subscribe(ctx context.Context, req *proto.SubscribeRequest, opts ...client.CallOption) (Broker_SubscribeClient, error) {
-	stream, err := c.c.Stream(ctx, c.c.NewRequest(c.name, "Broker.Subscribe", &proto.SubscribeRequest{}), opts...)
+func (c *brokerServiceClient) BatchPublish(ctx context.Context, req *proto.BatchPublishRequest, opts ...client.CallOption) (*proto.BatchPublishResponse, error) {
+	rsp := &proto.BatchPublishResponse{}
+	err := c.c.Call(ctx, c.c.NewRequest(c.name, "BrokerService.BatchPublish", req), rsp, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+func (c *brokerServiceClient) Subscribe(ctx context.Context, req *proto.SubscribeRequest, opts ...client.CallOption) (BrokerService_SubscribeClient, error) {
+	stream, err := c.c.Stream(ctx, c.c.NewRequest(c.name, "BrokerService.Subscribe", &proto.SubscribeRequest{}), opts...)
 	if err != nil {
 		return nil, err
 	}
 	if err := stream.Send(req); err != nil {
 		return nil, err
 	}
-	return &brokerClientSubscribe{stream}, nil
+	return &brokerServiceClientSubscribe{stream}, nil
 }
 
-type brokerClientSubscribe struct {
+type brokerServiceClientSubscribe struct {
 	stream client.Stream
 }
 
-func (s *brokerClientSubscribe) Close() error {
+func (s *brokerServiceClientSubscribe) Close() error {
 	return s.stream.Close()
 }
 
-func (s *brokerClientSubscribe) Context() context.Context {
+func (s *brokerServiceClientSubscribe) Context() context.Context {
 	return s.stream.Context()
 }
 
-func (s *brokerClientSubscribe) SendMsg(msg interface{}) error {
+func (s *brokerServiceClientSubscribe) SendMsg(msg interface{}) error {
 	return s.stream.Send(msg)
 }
 
-func (s *brokerClientSubscribe) RecvMsg(msg interface{}) error {
+func (s *brokerServiceClientSubscribe) RecvMsg(msg interface{}) error {
 	return s.stream.Recv(msg)
 }
 
-func (s *brokerClientSubscribe) Recv() (*proto.Message, error) {
+func (s *brokerServiceClientSubscribe) Recv() (*proto.Message, error) {
 	msg := &proto.Message{}
 	if err := s.stream.Recv(msg); err != nil {
 		return nil, err
@@ -69,58 +78,135 @@ func (s *brokerClientSubscribe) Recv() (*proto.Message, error) {
 	return msg, nil
 }
 
-type brokerServer struct {
-	BrokerServer
+func (c *brokerServiceClient) BatchSubscribe(ctx context.Context, req *proto.BatchSubscribeRequest, opts ...client.CallOption) (BrokerService_BatchSubscribeClient, error) {
+	stream, err := c.c.Stream(ctx, c.c.NewRequest(c.name, "BrokerService.BatchSubscribe", &proto.BatchSubscribeRequest{}), opts...)
+	if err != nil {
+		return nil, err
+	}
+	if err := stream.Send(req); err != nil {
+		return nil, err
+	}
+	return &brokerServiceClientBatchSubscribe{stream}, nil
 }
 
-func (h *brokerServer) Publish(ctx context.Context, req *proto.PublishRequest, rsp *proto.Empty) error {
-	return h.BrokerServer.Publish(ctx, req, rsp)
+type brokerServiceClientBatchSubscribe struct {
+	stream client.Stream
 }
 
-func (h *brokerServer) Subscribe(ctx context.Context, stream server.Stream) error {
+func (s *brokerServiceClientBatchSubscribe) Close() error {
+	return s.stream.Close()
+}
+
+func (s *brokerServiceClientBatchSubscribe) Context() context.Context {
+	return s.stream.Context()
+}
+
+func (s *brokerServiceClientBatchSubscribe) SendMsg(msg interface{}) error {
+	return s.stream.Send(msg)
+}
+
+func (s *brokerServiceClientBatchSubscribe) RecvMsg(msg interface{}) error {
+	return s.stream.Recv(msg)
+}
+
+func (s *brokerServiceClientBatchSubscribe) Recv() (*proto.Message, error) {
+	msg := &proto.Message{}
+	if err := s.stream.Recv(msg); err != nil {
+		return nil, err
+	}
+	return msg, nil
+}
+
+type brokerServiceServer struct {
+	BrokerServiceServer
+}
+
+func (h *brokerServiceServer) Publish(ctx context.Context, req *proto.PublishRequest, rsp *proto.PublishResponse) error {
+	return h.BrokerServiceServer.Publish(ctx, req, rsp)
+}
+
+func (h *brokerServiceServer) BatchPublish(ctx context.Context, req *proto.BatchPublishRequest, rsp *proto.BatchPublishResponse) error {
+	return h.BrokerServiceServer.BatchPublish(ctx, req, rsp)
+}
+
+func (h *brokerServiceServer) Subscribe(ctx context.Context, stream server.Stream) error {
 	msg := &proto.SubscribeRequest{}
 	if err := stream.Recv(msg); err != nil {
 		return err
 	}
-	return h.BrokerServer.Subscribe(ctx, msg, &brokerSubscribeStream{stream})
+	return h.BrokerServiceServer.Subscribe(ctx, msg, &brokerServiceSubscribeStream{stream})
 }
 
-type brokerSubscribeStream struct {
+type brokerServiceSubscribeStream struct {
 	stream server.Stream
 }
 
-func (s *brokerSubscribeStream) Close() error {
+func (s *brokerServiceSubscribeStream) Close() error {
 	return s.stream.Close()
 }
 
-func (s *brokerSubscribeStream) Context() context.Context {
+func (s *brokerServiceSubscribeStream) Context() context.Context {
 	return s.stream.Context()
 }
 
-func (s *brokerSubscribeStream) SendMsg(msg interface{}) error {
+func (s *brokerServiceSubscribeStream) SendMsg(msg interface{}) error {
 	return s.stream.Send(msg)
 }
 
-func (s *brokerSubscribeStream) RecvMsg(msg interface{}) error {
+func (s *brokerServiceSubscribeStream) RecvMsg(msg interface{}) error {
 	return s.stream.Recv(msg)
 }
 
-func (s *brokerSubscribeStream) Send(msg *proto.Message) error {
+func (s *brokerServiceSubscribeStream) Send(msg *proto.Message) error {
 	return s.stream.Send(msg)
 }
 
-func RegisterBrokerServer(s server.Server, sh BrokerServer, opts ...server.HandlerOption) error {
-	type broker interface {
-		Publish(ctx context.Context, req *proto.PublishRequest, rsp *proto.Empty) error
+func (h *brokerServiceServer) BatchSubscribe(ctx context.Context, stream server.Stream) error {
+	msg := &proto.BatchSubscribeRequest{}
+	if err := stream.Recv(msg); err != nil {
+		return err
+	}
+	return h.BrokerServiceServer.BatchSubscribe(ctx, msg, &brokerServiceBatchSubscribeStream{stream})
+}
+
+type brokerServiceBatchSubscribeStream struct {
+	stream server.Stream
+}
+
+func (s *brokerServiceBatchSubscribeStream) Close() error {
+	return s.stream.Close()
+}
+
+func (s *brokerServiceBatchSubscribeStream) Context() context.Context {
+	return s.stream.Context()
+}
+
+func (s *brokerServiceBatchSubscribeStream) SendMsg(msg interface{}) error {
+	return s.stream.Send(msg)
+}
+
+func (s *brokerServiceBatchSubscribeStream) RecvMsg(msg interface{}) error {
+	return s.stream.Recv(msg)
+}
+
+func (s *brokerServiceBatchSubscribeStream) Send(msg *proto.Message) error {
+	return s.stream.Send(msg)
+}
+
+func RegisterBrokerServiceServer(s server.Server, sh BrokerServiceServer, opts ...server.HandlerOption) error {
+	type brokerService interface {
+		Publish(ctx context.Context, req *proto.PublishRequest, rsp *proto.PublishResponse) error
+		BatchPublish(ctx context.Context, req *proto.BatchPublishRequest, rsp *proto.BatchPublishResponse) error
 		Subscribe(ctx context.Context, stream server.Stream) error
+		BatchSubscribe(ctx context.Context, stream server.Stream) error
 	}
-	type Broker struct {
-		broker
+	type BrokerService struct {
+		brokerService
 	}
-	h := &brokerServer{sh}
+	h := &brokerServiceServer{sh}
 	var nopts []server.HandlerOption
-	for _, endpoint := range BrokerEndpoints {
+	for _, endpoint := range BrokerServiceEndpoints {
 		nopts = append(nopts, api.WithEndpoint(&endpoint))
 	}
-	return s.Handle(s.NewHandler(&Broker{h}, append(nopts, opts...)...))
+	return s.Handle(s.NewHandler(&BrokerService{h}, append(nopts, opts...)...))
 }
