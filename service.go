@@ -14,12 +14,14 @@ import (
 	"go.unistack.org/micro/v3/metadata"
 )
 
+var _ broker.Broker = &serviceBroker{}
+
 type serviceBroker struct {
-	addrs   []string
-	service string
 	client  pbmicro.BrokerServiceClient
-	init    bool
+	service string
 	opts    broker.Options
+	addrs   []string
+	init    bool
 }
 
 func (b *serviceBroker) Address() string {
