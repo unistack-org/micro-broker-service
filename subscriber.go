@@ -6,6 +6,7 @@ import (
 	pbmicro "go.unistack.org/micro-broker-service/v3/micro"
 	"go.unistack.org/micro/v3/broker"
 	"go.unistack.org/micro/v3/logger"
+	"go.unistack.org/micro/v3/metadata"
 )
 
 type serviceSub struct {
@@ -18,9 +19,14 @@ type serviceSub struct {
 }
 
 type serviceEvent struct {
+	ctx     context.Context
 	topic   string
 	err     error
 	message *broker.Message
+}
+
+func (s *serviceEvent) Context() context.Context {
+	return s.ctx
 }
 
 func (s *serviceEvent) Topic() string {
@@ -67,9 +73,10 @@ func (s *serviceSub) run(ctx context.Context) error {
 	for {
 		// TODO: do not fail silently
 		msg, err := s.stream.Recv()
+		ctx := metadata.NewIncomingContext(context.Background(), msg.Header)
 		if err != nil {
 			if logger.V(logger.TraceLevel) {
-				logger.Tracef(ctx, "Streaming error for subcription to topic %s: %v", s.Topic(), err)
+				logger.Tracef(ctx, "streaming error for subcription to topic %s: %v", s.Topic(), err)
 			}
 
 			// close the exit channel
@@ -85,6 +92,7 @@ func (s *serviceSub) run(ctx context.Context) error {
 		}
 
 		p := &serviceEvent{
+			ctx:   ctx,
 			topic: s.topic,
 			message: &broker.Message{
 				Header: msg.Header,
