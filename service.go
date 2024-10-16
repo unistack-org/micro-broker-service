@@ -98,8 +98,8 @@ func (b *serviceBroker) Publish(ctx context.Context, topic string, msg *broker.M
 func (b *serviceBroker) publish(ctx context.Context, msgs []*broker.Message, opts ...broker.PublishOption) error {
 	for _, msg := range msgs {
 		topic, _ := msg.Header.Get(metadata.HeaderTopic)
-		if logger.V(logger.TraceLevel) {
-			logger.Tracef(ctx, "Publishing to topic %s broker %v", topic, b.addrs)
+		if b.opts.Logger.V(logger.TraceLevel) {
+			b.opts.Logger.Trace(ctx, fmt.Sprintf("Publishing to topic %s broker %v", topic, b.addrs))
 		}
 		_, err := b.client.Publish(ctx, &pb.PublishRequest{
 			Topic: topic,
@@ -122,8 +122,8 @@ func (b *serviceBroker) BatchSubscribe(ctx context.Context, topic string, handle
 
 func (b *serviceBroker) Subscribe(ctx context.Context, topic string, handler broker.Handler, opts ...broker.SubscribeOption) (broker.Subscriber, error) {
 	options := broker.NewSubscribeOptions(opts...)
-	if logger.V(logger.TraceLevel) {
-		logger.Tracef(ctx, "Subscribing to topic %s group %s broker %v", topic, options.Group, b.addrs)
+	if b.opts.Logger.V(logger.TraceLevel) {
+		b.opts.Logger.Trace(ctx, fmt.Sprintf("Subscribing to topic %s group %s broker %v", topic, options.Group, b.addrs))
 	}
 	stream, err := b.client.Subscribe(ctx, &pb.SubscribeRequest{
 		Topic: topic,
@@ -140,32 +140,33 @@ func (b *serviceBroker) Subscribe(ctx context.Context, topic string, handler bro
 		stream:  stream,
 		closed:  make(chan bool),
 		options: options,
+		opts:    b.opts,
 	}
 
 	go func() {
 		for {
 			select {
 			case <-sub.closed:
-				if logger.V(logger.TraceLevel) {
-					logger.Tracef(ctx, "Unsubscribed from topic %s", topic)
+				if b.opts.Logger.V(logger.TraceLevel) {
+					b.opts.Logger.Trace(ctx, "Unsubscribed from topic %s", topic)
 				}
 				return
 			default:
-				if logger.V(logger.TraceLevel) {
+				if b.opts.Logger.V(logger.TraceLevel) {
 					// run the subscriber
-					logger.Tracef(ctx, "Streaming from broker %v to topic [%s] group [%s]", b.addrs, topic, options.Group)
+					b.opts.Logger.Trace(ctx, fmt.Sprintf("Streaming from broker %v to topic [%s] group [%s]", b.addrs, topic, options.Group))
 				}
 				if err := sub.run(ctx); err != nil {
-					if logger.V(logger.TraceLevel) {
-						logger.Tracef(ctx, "Resubscribing to topic %s broker %v", topic, b.addrs)
+					if b.opts.Logger.V(logger.TraceLevel) {
+						b.opts.Logger.Trace(ctx, fmt.Sprintf("Resubscribing to topic %s broker %v", topic, b.addrs))
 					}
 					stream, err := b.client.Subscribe(ctx, &pb.SubscribeRequest{
 						Topic: topic,
 						Group: options.Group,
 					}, client.WithAddress(b.addrs...), client.WithRequestTimeout(time.Hour))
 					if err != nil {
-						if logger.V(logger.TraceLevel) {
-							logger.Tracef(ctx, "Failed to resubscribe to topic %s: %v", topic, err)
+						if b.opts.Logger.V(logger.TraceLevel) {
+							b.opts.Logger.Trace(ctx, fmt.Sprintf("Failed to resubscribe to topic %s: %v", topic, err))
 						}
 						time.Sleep(time.Second)
 						continue

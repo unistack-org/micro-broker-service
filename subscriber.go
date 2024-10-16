@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	pbmicro "go.unistack.org/micro-broker-service/v3/micro"
 	"go.unistack.org/micro/v3/broker"
@@ -15,6 +16,7 @@ type serviceSub struct {
 	handler broker.Handler
 	stream  pbmicro.BrokerService_SubscribeClient
 	closed  chan bool
+	opts    broker.Options
 	options broker.SubscribeOptions
 }
 
@@ -75,8 +77,8 @@ func (s *serviceSub) run(ctx context.Context) error {
 		msg, err := s.stream.Recv()
 		ctx := metadata.NewIncomingContext(context.Background(), msg.Header)
 		if err != nil {
-			if logger.V(logger.TraceLevel) {
-				logger.Tracef(ctx, "streaming error for subcription to topic %s: %v", s.Topic(), err)
+			if s.opts.Logger.V(logger.TraceLevel) {
+				s.opts.Logger.Trace(ctx, fmt.Sprintf("streaming error for subcription to topic %s: %v", s.Topic(), err))
 			}
 
 			// close the exit channel
