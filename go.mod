@@ -1,6 +1,6 @@
 module go.unistack.org/micro-broker-service/v3
 
-go 1.22
+go 1.23.0
 
 toolchain go1.23.2
 
@@ -11,10 +11,9 @@ require (
 )
 
 require (
-	github.com/google/go-cmp v0.6.0 // indirect
 	go.unistack.org/micro-proto/v3 v3.4.1 // indirect
-	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53 // indirect
 	google.golang.org/grpc v1.67.1 // indirect
 )
