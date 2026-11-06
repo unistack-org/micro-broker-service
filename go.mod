@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	go.unistack.org/micro-server-http/v3 v3.11.39
-	go.unistack.org/micro/v3 v3.11.41
+	go.unistack.org/micro/v3 v3.11.51
 	google.golang.org/protobuf v1.36.12
 )
 
